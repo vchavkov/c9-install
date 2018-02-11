@@ -122,7 +122,7 @@ start() {
       do
         if [ "$1" == "tmux" ]; then
           cd "$C9_DIR"
-          # time tmux_install $os $arch
+          time tmux_install $os $arch
           shift
           continue
         fi
@@ -151,7 +151,8 @@ start() {
     
     "base" )
       echo "Installing base packages. Use --help for more options"
-      start install node tmux_install nak ptyjs collab
+      #start install node tmux_install nak ptyjs collab
+      start install nak ptyjs collab
     ;;
     
     * )
@@ -337,6 +338,10 @@ check_tmux_version(){
 tmux_install(){
   echo :Installing TMUX
   mkdir -p "$C9_DIR/bin"
+  
+  ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
+  exit 0;
+
   if check_tmux_version "$C9_DIR/bin/tmux"; then
     echo ':Existing tmux version is up-to-date'
   
@@ -365,9 +370,8 @@ tmux_install(){
       fi
     
       #tmux_download  
-      #compile_tmux
-      #ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
-      ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
+      compile_tmux
+      ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
     fi
   fi
   
