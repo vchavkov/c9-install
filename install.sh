@@ -255,6 +255,7 @@ node(){
   ln -sf "$(which node)" "$C9_DIR"/bin/npm
 
   # use local npm cache
+  mkdir -p $C9_DIR/tmp/.npm
   "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
   ensure_local_gyp
   exit 0;
