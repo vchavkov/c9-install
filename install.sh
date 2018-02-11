@@ -251,15 +251,15 @@ ensure_local_gyp() {
 }
 
 node(){
-  mkdir -p $C9_DIR/node/bin
-  ln -sf "$(which node)" "$C9_DIR"/node/bin/node
-  ln -sf "$(which npm)" "$C9_DIR"/node/bin/npm
+  # mkdir -p $C9_DIR/node/bin
+  # ln -sf "$(which node)" "$C9_DIR"/node/bin/node
+  # ln -sf "$(which npm)" "$C9_DIR"/node/bin/npm
 
-  # use local npm cache
-  mkdir -p $C9_DIR/tmp/.npm
-  "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
-  ensure_local_gyp
-  exit 0;
+  # # use local npm cache
+  # mkdir -p $C9_DIR/tmp/.npm
+  # "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
+  # ensure_local_gyp
+  # exit 0;
 
   # clean up 
   rm -rf node 
@@ -271,9 +271,6 @@ node(){
   tar xzf node.tar.gz
   mv "node-$NODE_VERSION-$1-$2" node
   rm -f node.tar.gz
-
-  ln -sf "$(which node)" "$C9_DIR"/bin/node
-  ln -sf "$(which node)" "$C9_DIR"/bin/npm
 
   # use local npm cache
   "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
@@ -351,8 +348,8 @@ tmux_install(){
   echo :Installing TMUX
   mkdir -p "$C9_DIR/bin"
   
-  ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
-  exit 0;
+  #ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
+  #exit 0;
 
   if check_tmux_version "$C9_DIR/bin/tmux"; then
     echo ':Existing tmux version is up-to-date'
@@ -381,7 +378,7 @@ tmux_install(){
         exit 100;
       fi
     
-      #tmux_download  
+      tmux_download  
       compile_tmux
       ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
     fi
