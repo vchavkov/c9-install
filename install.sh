@@ -122,7 +122,7 @@ start() {
       do
         if [ "$1" == "tmux" ]; then
           cd "$C9_DIR"
-          time tmux_install $os $arch
+          # time tmux_install $os $arch
           shift
           continue
         fi
@@ -144,7 +144,7 @@ start() {
       echo $VERSION > "$C9_DIR"/installed
       
       cd "$C9_DIR"
-      DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/license-notice.md "Third-Party Licensing Notices.md"
+      DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/license-notice.md "Third-Party Licensing Notices.md"
       
       echo :Done.
     ;;
