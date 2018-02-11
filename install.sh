@@ -1,5 +1,5 @@
-#!/bin/bash -ex
-set -e
+#!/bin/bash -e
+set -e -x
 has() {
   type "$1" > /dev/null 2>&1
 }
