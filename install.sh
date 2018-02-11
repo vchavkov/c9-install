@@ -321,11 +321,11 @@ tmux_download(){
   echo ":N.B: This will take a while. To speed this up install tmux 1.9 manually on your machine and restart this process."
   
   echo ":Downloading Libevent..."
-  DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/libevent-2.1.8-stable.tar.gz libevent-2.1.8-stable.tar.gz
+  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/libevent-2.1.8-stable.tar.gz libevent-2.1.8-stable.tar.gz
   echo ":Downloading Ncurses..."
-  DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/ncurses-5.9.tar.gz ncurses-5.9.tar.gz
+  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/ncurses-5.9.tar.gz ncurses-5.9.tar.gz
   echo ":Downloading Tmux..."
-  DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/tmux-1.9.tar.gz tmux-1.9.tar.gz
+  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/tmux-1.9.tar.gz tmux-1.9.tar.gz
 }
 
 check_tmux_version(){
