@@ -364,9 +364,9 @@ tmux_install(){
         exit 100;
       fi
     
-      tmux_download  
-      compile_tmux
-      ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
+      #tmux_download  
+      #compile_tmux
+      #ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
     fi
   fi
   
