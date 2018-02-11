@@ -151,8 +151,7 @@ start() {
     
     "base" )
       echo "Installing base packages. Use --help for more options"
-      #start install node tmux_install nak ptyjs collab
-      start install nak ptyjs collab
+      start install node tmux_install nak ptyjs collab      
     ;;
     
     * )
@@ -252,6 +251,14 @@ ensure_local_gyp() {
 }
 
 node(){
+  ln -sf "$(which node)" "$C9_DIR"/bin/node
+  ln -sf "$(which node)" "$C9_DIR"/bin/npm
+
+  # use local npm cache
+  "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
+  ensure_local_gyp
+  exit 0;
+
   # clean up 
   rm -rf node 
   rm -rf node.tar.gz
@@ -263,8 +270,11 @@ node(){
   mv "node-$NODE_VERSION-$1-$2" node
   rm -f node.tar.gz
 
+  ln -sf "$(which node)" "$C9_DIR"/bin/node
+  ln -sf "$(which node)" "$C9_DIR"/bin/npm
+
   # use local npm cache
-  "$NPM" config -g set cache  "$C9_DIR/tmp/.npm"
+  "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
   ensure_local_gyp
 
 }
