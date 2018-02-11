@@ -251,8 +251,9 @@ ensure_local_gyp() {
 }
 
 node(){
-  ln -sf "$(which node)" "$C9_DIR"/bin/node
-  ln -sf "$(which npm)" "$C9_DIR"/bin/npm
+  mkdir -p $C9_DIR/node/bin
+  ln -sf "$(which node)" "$C9_DIR"/node/bin/node
+  ln -sf "$(which npm)" "$C9_DIR"/node/bin/npm
 
   # use local npm cache
   mkdir -p $C9_DIR/tmp/.npm
