@@ -23,7 +23,8 @@ fi
 
 VERSION=1
 NODE_VERSION=v0.10.28
-C9_DIR=$HOME/.c9
+#C9_DIR=$HOME/.c9
+C9_DIR=/home/vchavkov/.c9
 NPM=$C9_DIR/node/bin/npm
 NODE=$C9_DIR/node/bin/node
 
@@ -34,7 +35,7 @@ start() {
   fi
 
   check_deps
-  
+
   # Try to figure out the os and arch for binary fetching
   local uname="$(uname -a)"
   local os=
@@ -50,17 +51,17 @@ start() {
     *i*86*) arch=x86 ;;
     *armv6l*) arch=arm-pi ;;
   esac
-  
+
   if [ $os != "linux" ] && [ $os != "darwin" ]; then
     echo "Unsupported Platform: $os $arch" 1>&2
     exit 1
   fi
-  
+
   if [ $arch != "x64" ] && [ $arch != "x86" ]; then
     echo "Unsupported Architecture: $os $arch" 1>&2
     exit 1
   fi
-  
+
   case $1 in
     "help" )
       echo
@@ -90,15 +91,15 @@ start() {
       # echo "rhc - RedHat OpenShift"
       # echo "gae - Google AppEngine"
     ;;
-    
+
     "install" )
       shift
-    
+
       # make sure dirs are around
       mkdir -p $C9_DIR/bin
       mkdir -p $C9_DIR/node_modules
       cd $C9_DIR
-    
+
       # install packages
       while [ $# -ne 0 ]
       do
@@ -110,7 +111,7 @@ start() {
         time eval ${1} $os $arch
         shift
       done
-      
+
       # finalize
       pushd $C9_DIR/node_modules/.bin
       for FILE in $C9_DIR/node_modules/.bin/*; do
@@ -121,16 +122,16 @@ start() {
         fi
       done
       popd
-      
+
       echo $VERSION > $HOME/.c9/installed
       echo :Done.
     ;;
-    
+
     "base" )
       echo "Installing base packages. Use --help for more options"
       start install node tmux_install nak ptyjs vfsextend collab
     ;;
-    
+
     * )
       start base
     ;;
@@ -152,12 +153,12 @@ check_deps() {
 # NodeJS
 
 node(){
-  # clean up 
-  rm -rf node 
+  # clean up
+  rm -rf node
   rm -rf node-$NODE_VERSION*
-  
+
   echo :Installing Node $NODE_VERSION
-  
+
   $DOWNLOAD http://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-$1-$2.tar.gz
   tar xvfz node-$NODE_VERSION-$1-$2.tar.gz
   mv node-$NODE_VERSION-$1-$2 node
@@ -176,7 +177,7 @@ compile_tmux(){
   make
   echo ":Installing libevent"
   make install
- 
+
   cd "$C9_DIR"
   echo "Compiling ncurses..."
   tar xzvf ncurses-5.9.tar.gz
@@ -188,7 +189,7 @@ compile_tmux(){
   make
   echo ":Installing Ncurses"
   make install
- 
+
   cd "$C9_DIR"
   echo "Compiling tmux..."
   tar zxvf tmux-1.8.tar.gz
@@ -204,7 +205,7 @@ compile_tmux(){
 
 tmux_download(){
   echo ":Downloading tmux source code"
-  
+
   echo "Downloading Libevent..."
   $DOWNLOAD https://raw.github.com/c9/install/master/packages/tmux/libevent-2.0.21-stable.tar.gz
   echo "Downloading Ncurses..."
@@ -217,7 +218,7 @@ check_tmux_version(){
   if [ ! -x $1 ]; then
     return 1
   fi
-  tmux_version=$($1 -V | cut -d' ' -f2)  
+  tmux_version=$($1 -V | cut -d' ' -f2)
   if [ ! "$tmux_version" ]; then
     return 1
   fi
@@ -235,13 +236,13 @@ tmux_install(){
 
   if check_tmux_version $C9_DIR/bin/tmux; then
     echo ':Existing tmux version is up-to-date'
-  
+
   # If we can support tmux 1.9 or detect upgrades, the following would work:
   #elif has "tmux" && check_tmux_version tmux; then
   #  echo ':A good version of tmux was found, creating a symlink'
   #  ln -sf $(which tmux) "$C9_DIR"/bin/tmux
   #  return 0
-  
+
   # If tmux is not present or at the wrong version, we will install it
   else
     if [ $os = "darwin" ]; then
@@ -253,12 +254,12 @@ tmux_install(){
       ln -sf $(which tmux) "$C9_DIR"/bin/tmux
     # Linux
     else
-      tmux_download  
+      tmux_download
       compile_tmux
       ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
     fi
   fi
-  
+
   if ! check_tmux_version $C9_DIR/bin/tmux; then
     echo "Installed tmux does not appear to work:"
     exit 100
@@ -295,7 +296,7 @@ ptyjs(){
   $NPM install node-gyp
   PATH=$C9_DIR/node_modules/.bin:$PATH
   $NPM install pty.js@0.2.3
-  
+
   HASPTY=`"$C9_DIR/node/bin/node" -e "console.log(require('pty.js'))" | grep createTerminal | wc -l`
   if [ $HASPTY -ne 1 ]; then
     echo "Unknown exception installing pty.js"
@@ -321,28 +322,28 @@ sass(){
 
 typescript(){
   echo :Installing TypeScript
-  $NPM install typescript  
+  $NPM install typescript
 }
 
 stylus(){
   echo :Installing Stylus
-  $NPM install stylus  
+  $NPM install stylus
 }
 
 # go(){
-  
+
 # }
 
 # heroku(){
-  
+
 # }
 
 # rhc(){
-  
+
 # }
 
 # gae(){
-  
+
 # }
 
 start $@
