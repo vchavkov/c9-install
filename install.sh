@@ -27,7 +27,6 @@ fi
 VERSION=1
 NODE_VERSION=v4.8.7
 C9_DIR=$HOME/.c9
-#C9_DIR=/home/vchavkov/.c9
 NPM=$C9_DIR/node/bin/npm
 NODE=$C9_DIR/node/bin/node
 
