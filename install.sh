@@ -1,5 +1,5 @@
 #!/bin/bash -e
-set -e -x
+set -e
 has() {
   type "$1" > /dev/null 2>&1
 }
@@ -24,9 +24,20 @@ else
   exit 1
 fi
 
-VERSION=1
-NODE_VERSION=v4.8.7
 C9_DIR=$HOME/.c9
+if [[ ${1-} == -d ]]; then
+    C9_DIR=$2
+    shift 2
+fi
+
+# Check if C9_DIR exists
+if [ ! -d "$C9_DIR" ]; then
+  mkdir -p $C9_DIR
+fi
+
+VERSION=1
+NODE_VERSION=v6.3.1
+NODE_VERSION_ARM_PI=v0.10.28
 NPM=$C9_DIR/node/bin/npm
 NODE=$C9_DIR/node/bin/node
 
@@ -46,7 +57,7 @@ start() {
   fi
 
   check_deps
-
+  
   # Try to figure out the os and arch for binary fetching
   local uname="$(uname -s)"
   local os=
@@ -61,6 +72,7 @@ start() {
   esac
   case "$arch" in
     *arm64*) arch=arm64 ;;
+    *aarch64*) arch=arm64 ;;
     *armv6l*) arch=armv6l ;;
     *armv7l*) arch=armv7l ;;
     *x86_64*) arch=x64 ;;
@@ -108,15 +120,15 @@ start() {
       # echo "rhc - RedHat OpenShift"
       # echo "gae - Google AppEngine"
     ;;
-
+    
     "install" )
       shift
-
+    
       # make sure dirs are around
       mkdir -p "$C9_DIR"/bin
       mkdir -p "$C9_DIR"/tmp
       mkdir -p "$C9_DIR"/node_modules
-
+    
       # install packages
       while [ $# -ne 0 ]
       do
@@ -130,7 +142,7 @@ start() {
         time eval ${1} $os $arch
         shift
       done
-
+      
       # finalize
       pushd "$C9_DIR"/node_modules/.bin
       for FILE in "$C9_DIR"/node_modules/.bin/*; do
@@ -140,20 +152,20 @@ start() {
         mv "$FILE.tmp-sed" "$FILE"
       done
       popd
-
+      
       echo $VERSION > "$C9_DIR"/installed
-
+      
       cd "$C9_DIR"
-      DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/license-notice.md "Third-Party Licensing Notices.md"
-
+      DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/license-notice.md "Third-Party Licensing Notices.md"
+      
       echo :Done.
     ;;
-
+    
     "base" )
       echo "Installing base packages. Use --help for more options"
       start install node tmux_install nak ptyjs collab
     ;;
-
+    
     * )
       start base
     ;;
@@ -163,7 +175,7 @@ start() {
 check_deps() {
   local ERR
   local OS
-
+  
   if [[ `cat /etc/os-release 2>/dev/null` =~ CentOS ]]; then
     OS="CentOS"
   elif [[ `cat /proc/version 2>/dev/null` =~ Ubuntu|Debian ]]; then
@@ -181,7 +193,7 @@ check_deps() {
       ERR=1
     fi
   done
-
+  
   # CentOS
   if [ "$OS" == "CentOS" ]; then
     if ! yum list installed glibc-static >/dev/null 2>&1; then
@@ -190,9 +202,9 @@ check_deps() {
       ERR=1
     fi
   fi
-
+  
   check_python
-
+  
   if [ "$ERR" ]; then exit 1; fi
 }
 
@@ -213,7 +225,7 @@ check_python() {
 
 # NodeJS
 
-downlaod_virtualenv() {
+download_virtualenv() {
   VIRTUALENV_VERSION="virtualenv-12.0.7"
   DOWNLOAD "https://pypi.python.org/packages/source/v/virtualenv/$VIRTUALENV_VERSION.tar.gz" $VIRTUALENV_VERSION.tar.gz
   tar xzf $VIRTUALENV_VERSION.tar.gz
@@ -231,7 +243,7 @@ ensure_local_gyp() {
     if has virtualenv; then
       virtualenv -p python2 "$C9_DIR/python"
     else
-      downlaod_virtualenv
+      download_virtualenv
       "$PYTHON" virtualenv/virtualenv.py "$C9_DIR/python"
     fi
     if [[ -f "$C9_DIR/python/bin/python2" ]]; then
@@ -243,7 +255,7 @@ ensure_local_gyp() {
   fi
   "$NPM" config -g set python "$PYTHON"
   "$NPM" config -g set unsafe-perm true
-
+  
   local GYP_PATH=$C9_DIR/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js
   if [ -f  "$GYP_PATH" ]; then
     ln -s "$GYP_PATH" "$C9_DIR"/node/bin/node-gyp &> /dev/null || :
@@ -251,29 +263,19 @@ ensure_local_gyp() {
 }
 
 node(){
-  # mkdir -p $C9_DIR/node/bin
-  # ln -sf "$(which node)" "$C9_DIR"/node/bin/node
-  # ln -sf "$(which npm)" "$C9_DIR"/node/bin/npm
-
-  # # use local npm cache
-  # mkdir -p $C9_DIR/tmp/.npm
-  # "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
-  # ensure_local_gyp
-  # exit 0;
-
-  # clean up
-  rm -rf node
+  # clean up 
+  rm -rf node 
   rm -rf node.tar.gz
-
+  
   echo :Installing Node $NODE_VERSION
-
+  
   DOWNLOAD https://nodejs.org/dist/"$NODE_VERSION/node-$NODE_VERSION-$1-$2.tar.gz" node.tar.gz
   tar xzf node.tar.gz
   mv "node-$NODE_VERSION-$1-$2" node
   rm -f node.tar.gz
 
   # use local npm cache
-  "$NPM" config -g set cache "$C9_DIR/tmp/.npm"
+  "$NPM" config -g set cache  "$C9_DIR/tmp/.npm"
   ensure_local_gyp
 
 }
@@ -281,35 +283,35 @@ node(){
 compile_tmux(){
   cd "$C9_DIR"
   echo ":Compiling libevent..."
-  tar -xzf libevent-2.1.8-stable.tar.gz
-  rm libevent-2.1.8-stable.tar.gz
-  cd libevent-2.1.8-stable
+  tar xzf libevent-2.0.22-stable.tar.gz
+  rm libevent-2.0.22-stable.tar.gz
+  cd libevent-2.0.22-stable
   echo ":Configuring Libevent"
-  ./configure --prefix="$C9_DIR/local"
+  ./configure --disable-shared --prefix="$C9_DIR/local"
   echo ":Compiling Libevent"
   make
   echo ":Installing libevent"
   make install
-
+ 
   cd "$C9_DIR"
   echo ":Compiling ncurses..."
-  tar xzf ncurses-5.9.tar.gz
-  rm ncurses-5.9.tar.gz
-  cd ncurses-5.9
+  tar xzf ncurses-6.0.tar.gz
+  rm ncurses-6.0.tar.gz
+  cd ncurses-6.0
   echo ":Configuring Ncurses"
   CPPFLAGS=-P ./configure --prefix="$C9_DIR/local" --without-tests --without-cxx
   echo ":Compiling Ncurses"
   make
   echo ":Installing Ncurses"
   make install
-
+ 
   cd "$C9_DIR"
   echo ":Compiling tmux..."
-  tar xzf tmux-1.9.tar.gz
-  rm tmux-1.9.tar.gz
-  cd tmux-1.9
+  tar xzf tmux-2.2.tar.gz
+  rm tmux-2.2.tar.gz
+  cd tmux-2.2
   echo ":Configuring Tmux"
-  ./configure CFLAGS="-I$C9_DIR/local/include -I$C9_DIR/local/include/ncurses" CPPFLAGS="-I$C9_DIR/local/include -I$C9_DIR/local/include/ncurses" LDFLAGS="-static-libgcc -L$C9_DIR/local/lib" LIBEVENT_CFLAGS="-I$C9_DIR/local/include" LIBEVENT_LIBS="-static -L$C9_DIR/local/lib -levent" LIBS="-L$C9_DIR/local/lib/ncurses -lncurses" --prefix="$C9_DIR/local"
+  ./configure CFLAGS="-I$C9_DIR/local/include -I$C9_DIR/local/include/ncurses" LDFLAGS="-static-libgcc -L$C9_DIR/local/lib" --prefix="$C9_DIR/local"
   echo ":Compiling Tmux"
   make
   echo ":Installing Tmux"
@@ -318,26 +320,28 @@ compile_tmux(){
 
 tmux_download(){
   echo ":Downloading tmux source code"
-  echo ":N.B: This will take a while. To speed this up install tmux 1.9 manually on your machine and restart this process."
-
+  echo ":N.B: This will take a while. To speed this up install tmux 2.2 manually on your machine and restart this process."
+  
   echo ":Downloading Libevent..."
-  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/libevent-2.1.8-stable.tar.gz libevent-2.1.8-stable.tar.gz
+  # DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/libevent-2.0.21-stable.tar.gz
+  DOWNLOAD https://github.com/libevent/libevent/releases/download/release-2.0.22-stable/libevent-2.0.22-stable.tar.gz libevent-2.0.22-stable.tar.gz
   echo ":Downloading Ncurses..."
-  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/ncurses-5.9.tar.gz ncurses-5.9.tar.gz
+  DOWNLOAD https://github.com/c9/install/raw/master/packages/tmux/ncurses-6.0.tar.gz ncurses-6.0.tar.gz
   echo ":Downloading Tmux..."
-  DOWNLOAD https://raw.githubusercontent.com/vchavkov/c9-install/master/packages/tmux/tmux-1.9.tar.gz tmux-1.9.tar.gz
+  # DOWNLOAD https://raw.githubusercontent.com/c9/install/master/packages/tmux/tmux-1.9.tar.gz
+  DOWNLOAD https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz tmux-2.2.tar.gz
 }
 
 check_tmux_version(){
   if [ ! -x "$1" ]; then
     return 1
   fi
-  tmux_version=$($1 -V | sed -e's/^[a-z0-9.-]* //g' | sed -e's/[a-z]*$//')
+  tmux_version=$($1 -V | sed -e's/^[a-z0-9.-]* //g' | sed -e's/[a-z]*$//')  
   if [ ! "$tmux_version" ]; then
     return 1
   fi
 
-  if [ "$("$PYTHON" -c "print 1.7<=$tmux_version")" == "True" ]; then
+  if [ "$("$PYTHON" -c "print 1.7<=$tmux_version and $tmux_version <= 2.2")" == "True" ]; then
     return 0
   else
     return 1
@@ -347,19 +351,15 @@ check_tmux_version(){
 tmux_install(){
   echo :Installing TMUX
   mkdir -p "$C9_DIR/bin"
-
-  #ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
-  #exit 0;
-
   if check_tmux_version "$C9_DIR/bin/tmux"; then
     echo ':Existing tmux version is up-to-date'
-
+  
   # If we can support tmux 1.9 or detect upgrades, the following would work:
   elif has "tmux" && check_tmux_version "$(which tmux)"; then
     echo ':A good version of tmux was found, creating a symlink'
     ln -sf "$(which tmux)" "$C9_DIR"/bin/tmux
     return 0
-
+  
   # If tmux is not present or at the wrong version, we will install it
   else
     if [ $os = "darwin" ]; then
@@ -377,13 +377,13 @@ tmux_install(){
         echo ":Could not find make. Please install make and try again."
         exit 100;
       fi
-
-      tmux_download
+    
+      tmux_download  
       compile_tmux
       ln -sf "$C9_DIR"/local/bin/tmux "$C9_DIR"/bin/tmux
     fi
   fi
-
+  
   if ! check_tmux_version "$C9_DIR"/bin/tmux; then
     echo "Installed tmux does not appear to work:"
     exit 100
@@ -410,35 +410,17 @@ nak(){
 
 ptyjs(){
   echo :Installing pty.js
-
-  if [ "$arch" == "x64" ] && [ "$os" == "linux" ] ; then
-    rm -rf pty.js node_modules/pty.js pty.js.tar.gz \
-      && DOWNLOAD https://github.com/c9/install/releases/download/bin/pty-$NODE_VERSION-$os-$arch.tar.gz pty.js.tar.gz \
-      && tar -U -zxf pty.js.tar.gz \
-      && mv pty.js node_modules \
-      && rm -f pty.js.tar.gz \
-      || :
-    if hasPty; then
-      return 0
-    fi
-    rm -rf pty.js node_modules/pty.js
-  fi
-  echo :prcompiled pty.js not found building from source
-  buildPty
-}
-
-buildPty() {
-  "$NPM" install pty.js@0.3.0
+  "$NPM" install node-pty-prebuilt@0.7.3
 
   if ! hasPty; then
     echo "Unknown exception installing pty.js"
-    "$C9_DIR/node/bin/node" -e "console.log(require('pty.js'))"
+    "$C9_DIR/node/bin/node" -e "console.log(require('node-pty-prebuilt'))"
     exit 100
   fi
 }
 
 hasPty() {
-  local HASPTY=$("$C9_DIR/node/bin/node" -p "typeof require('pty.js').createTerminal=='function'")
+  local HASPTY=$("$C9_DIR/node/bin/node" -p "typeof require('node-pty-prebuilt').createTerminal=='function'" 2> /dev/null)
   if [ "$HASPTY" != true ]; then
     return 1
   fi
@@ -461,28 +443,28 @@ sass(){
 
 typescript(){
   echo :Installing TypeScript
-  "$NPM" install typescript
+  "$NPM" install typescript  
 }
 
 stylus(){
   echo :Installing Stylus
-  "$NPM" install stylus
+  "$NPM" install stylus  
 }
 
 # go(){
-
+  
 # }
 
 # heroku(){
-
+  
 # }
 
 # rhc(){
-
+  
 # }
 
 # gae(){
-
+  
 # }
 
 start "$@"
